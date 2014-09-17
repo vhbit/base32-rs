@@ -1,5 +1,9 @@
 language: rust
 
+env:
+    global:
+        - secure: c6Q4BWprzeE9/1LCKO+It3XJtvYifgoqYTyQYH28qKjTu8i0PegBQHMvlPmCELHEkbhS//dKevNKfJe+HZqV2NjgfLvmQbuTWfe9l+VEwgOGNKABOaNJzzo8X9g4DwJ1zgUwHe1ASgNZH0KHSUm62EiIShI1W6HLmevP4ZQ0pII=
+
 script:
     - cargo test --verbose && cargo doc --verbose --no-deps
 

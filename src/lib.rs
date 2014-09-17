@@ -116,15 +116,6 @@ mod test {
     use std;
     use std::rand::distributions::IndependentSample;
 
-    #[test]
-    fn ttt() {
-        let data = [0];
-        let enc = encode(data.as_slice());
-        let dec = decode(enc.as_slice()).unwrap();
-        println!("Enc {}, Dec {}", enc, dec);
-        assert_eq!(data.as_slice(), dec.as_slice());
-    }
-
     #[quickcheck]
     fn invertible(data: Vec<u8>) -> bool {
         if data.len() == 0 {
