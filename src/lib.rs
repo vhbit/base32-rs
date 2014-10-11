@@ -19,33 +19,34 @@ pub fn encode(data: &[u8]) -> Vec<u8> {
 
     let alphabet = BASE32_ALPHABET.as_bytes();
     let mut result = Vec::with_capacity(data.len() * 8 / 5 + 8);
-    let mut bits_left = 8;
-    let mut bits: u32 = (data[0] as u32) & 0xff;
-    let mut stop = false;
-    let mut cur_idx = 1u;
-    loop {
-        if bits_left < 5 {
-            if cur_idx < data.len() {
-                let ch = data[cur_idx];
-                cur_idx += 1;
-                bits = (bits << 8) | ((ch as u32) & 0xff);
-                bits_left += 8;
-            } else {
-                if bits_left == 0 {
-                    break;
-                } else {
-                    let leftover = 5 - bits_left;
-                    bits = bits << leftover;
-                    bits_left += leftover;
-                    stop = true;
-                }
+
+    for chunk in data.chunks(5) {
+        if chunk.len() == 5 {
+            result.push(alphabet[((chunk[0] & 0xF8) >> 3) as uint]);
+            result.push(alphabet[(((chunk[0] & 0x07) << 2) | ((chunk[1] & 0xC0) >> 6)) as uint]);
+            result.push(alphabet[((chunk[1] & 0x3E) >> 1) as uint]);
+            result.push(alphabet[(((chunk[1] & 0x01) << 4) | ((chunk[2] & 0xF0) >> 4)) as uint]);
+            result.push(alphabet[(((chunk[2] & 0x0F) << 1) | (chunk[3] >> 7)) as uint]);
+            result.push(alphabet[((chunk[3] & 0x7C) >> 2) as uint]);
+            result.push(alphabet[(((chunk[3] & 0x03) << 3) | ((chunk[4] & 0xE0) >> 5)) as uint]);
+            result.push(alphabet[(chunk[4] & 0x1F) as uint]);
+        } else {
+            // Handle leftover, max 40 bits, so 64 should be enough
+            let mut leftover: u64 = 0;
+            for &ch in chunk.iter() {
+                leftover = leftover << 8 | ((ch as u64) & 0xff)
+            }
+
+            let total_bits = chunk.len() * 8;
+            let padding_bits = (chunk.len() * 8 / 5 + 1) * 5 - total_bits;
+            leftover = leftover << padding_bits;
+
+            let mut bits_left = (total_bits + padding_bits) as int;
+            while bits_left > 0 {
+                result.push(alphabet[((leftover >> (bits_left as uint - 5)) & 0x1f) as uint]);
+                bits_left -= 5;
             }
         }
-
-        let idx = ((bits >> (bits_left - 5)) & 0x1f) as uint;
-        bits_left -= 5;
-        unsafe { result.push(*alphabet.unsafe_get(idx)) };
-        if stop { break };
     }
 
     let pad: u8 = '='.to_ascii().to_byte();
