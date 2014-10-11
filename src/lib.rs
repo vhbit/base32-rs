@@ -11,7 +11,6 @@ extern crate quickcheck;
 #[phase(plugin)]
 extern crate quickcheck_macros;
 
-use std::num::Float;
 
 pub static BASE32_ALPHABET: &'static str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
@@ -22,7 +21,6 @@ pub fn encode(data: &[u8]) -> Vec<u8> {
     let mut result = Vec::with_capacity(data.len() * 8 / 5 + 8);
     let mut bits_left = 8;
     let mut bits: u32 = (data[0] as u32) & 0xff;
-    let mut iter = data.iter().skip(1);
     let mut stop = false;
     let mut cur_idx = 1u;
     loop {
@@ -58,19 +56,17 @@ pub fn encode(data: &[u8]) -> Vec<u8> {
     result
 }
 
-static inv_alphabet: [i8, ..256] = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1, -2, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+static INV_ALPHABET: [i8, ..256] = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1, -2, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
 
 pub fn decode(data: &[u8]) -> Option<Vec<u8>> {
-    let mut rem = data.len() % 8;
+    let rem = data.len() % 8;
     if (rem != 0) || (data.len() == 0) {
         return None;
     }
 
     let mut result = Vec::with_capacity(data.len() * 5 / 8 + 8);
-    let mut bits: u32 = inv_alphabet[data[0] as uint] as u32;
+    let mut bits: u32 = INV_ALPHABET[data[0] as uint] as u32;
     let mut bits_left: u8 = 5;
-    let mut iter = data.iter().skip(1);
-    let mut stop = false;
     let mut cur_idx: uint = 1;
     loop {
         if bits_left < 8 {
@@ -78,7 +74,7 @@ pub fn decode(data: &[u8]) -> Option<Vec<u8>> {
                 let ch = data[cur_idx];
                 cur_idx += 1;
 
-                let v = inv_alphabet[ch as uint];
+                let v = INV_ALPHABET[ch as uint];
                 if v == -2 {
                     break;
                 } else if v == -1 {
@@ -111,10 +107,7 @@ pub fn decode(data: &[u8]) -> Option<Vec<u8>> {
 #[cfg(test)]
 mod test {
     extern crate test;
-    use super::{encode, decode, BASE32_ALPHABET};
-    use quickcheck;
-    use std;
-    use std::rand::distributions::IndependentSample;
+    use super::{encode, decode};
 
     #[quickcheck]
     fn invertible(data: Vec<u8>) -> bool {
