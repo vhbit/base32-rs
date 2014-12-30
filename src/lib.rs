@@ -49,7 +49,7 @@ pub fn encode(data: &[u8]) -> Vec<u8> {
         }
     }
 
-    let pad: u8 = '='.to_ascii().to_byte();
+    let pad: u8 = '=' as u8;
     while (result.len() % 8) != 0 {
         result.push(pad);
     }
