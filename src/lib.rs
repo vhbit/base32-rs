@@ -1,9 +1,6 @@
 #![crate_name="base32"]
 #![crate_type="rlib"]
 
-#![feature(phase)]
-#![feature(macro_rules)]
-
 #[cfg(test)]
 extern crate quickcheck;
 
