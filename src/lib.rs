@@ -1,11 +1,13 @@
 #![crate_name="base32"]
 #![crate_type="rlib"]
+#![feature(plugin)]
+#![allow(unstable)]
 
 #[cfg(test)]
 extern crate quickcheck;
 
 #[cfg(test)]
-#[phase(plugin)]
+#[plugin]
 extern crate quickcheck_macros;
 
 
@@ -19,14 +21,14 @@ pub fn encode(data: &[u8]) -> Vec<u8> {
 
     for chunk in data.chunks(5) {
         if chunk.len() == 5 {
-            result.push(alphabet[((chunk[0] & 0xF8) >> 3) as uint]);
-            result.push(alphabet[(((chunk[0] & 0x07) << 2) | ((chunk[1] & 0xC0) >> 6)) as uint]);
-            result.push(alphabet[((chunk[1] & 0x3E) >> 1) as uint]);
-            result.push(alphabet[(((chunk[1] & 0x01) << 4) | ((chunk[2] & 0xF0) >> 4)) as uint]);
-            result.push(alphabet[(((chunk[2] & 0x0F) << 1) | (chunk[3] >> 7)) as uint]);
-            result.push(alphabet[((chunk[3] & 0x7C) >> 2) as uint]);
-            result.push(alphabet[(((chunk[3] & 0x03) << 3) | ((chunk[4] & 0xE0) >> 5)) as uint]);
-            result.push(alphabet[(chunk[4] & 0x1F) as uint]);
+            result.push(alphabet[((chunk[0] & 0xF8) >> 3) as usize]);
+            result.push(alphabet[(((chunk[0] & 0x07) << 2) | ((chunk[1] & 0xC0) >> 6)) as usize]);
+            result.push(alphabet[((chunk[1] & 0x3E) >> 1) as usize]);
+            result.push(alphabet[(((chunk[1] & 0x01) << 4) | ((chunk[2] & 0xF0) >> 4)) as usize]);
+            result.push(alphabet[(((chunk[2] & 0x0F) << 1) | (chunk[3] >> 7)) as usize]);
+            result.push(alphabet[((chunk[3] & 0x7C) >> 2) as usize]);
+            result.push(alphabet[(((chunk[3] & 0x03) << 3) | ((chunk[4] & 0xE0) >> 5)) as usize]);
+            result.push(alphabet[(chunk[4] & 0x1F) as usize]);
         } else {
             // Handle leftover, max 40 bits, so 64 should be enough
             let mut leftover: u64 = 0;
@@ -38,9 +40,9 @@ pub fn encode(data: &[u8]) -> Vec<u8> {
             let padding_bits = (chunk.len() * 8 / 5 + 1) * 5 - total_bits;
             leftover = leftover << padding_bits;
 
-            let mut bits_left = (total_bits + padding_bits) as int;
+            let mut bits_left = (total_bits + padding_bits) as isize;
             while bits_left > 0 {
-                result.push(alphabet[((leftover >> (bits_left as uint - 5)) & 0x1f) as uint]);
+                result.push(alphabet[((leftover >> (bits_left as usize - 5)) & 0x1f) as usize]);
                 bits_left -= 5;
             }
         }
@@ -63,16 +65,16 @@ pub fn decode(data: &[u8]) -> Option<Vec<u8>> {
     }
 
     let mut result = Vec::with_capacity(data.len() * 5 / 8 + 8);
-    let mut bits: u32 = INV_ALPHABET[data[0] as uint] as u32;
+    let mut bits: u32 = INV_ALPHABET[data[0] as usize] as u32;
     let mut bits_left: u8 = 5;
-    let mut cur_idx: uint = 1;
+    let mut cur_idx: usize = 1;
     loop {
         if bits_left < 8 {
             if cur_idx < data.len() {
                 let ch = data[cur_idx];
                 cur_idx += 1;
 
-                let v = INV_ALPHABET[ch as uint];
+                let v = INV_ALPHABET[ch as usize];
                 if v == -2 {
                     break;
                 } else if v == -1 {
@@ -93,7 +95,7 @@ pub fn decode(data: &[u8]) -> Option<Vec<u8>> {
         }
 
         if bits_left >= 8 {
-            let v = (bits >> (bits_left - 8) as uint) as u8;
+            let v = (bits >> (bits_left - 8) as usize) as u8;
             bits_left -= 8;
             result.push(v);
         }
