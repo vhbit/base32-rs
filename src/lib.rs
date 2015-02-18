@@ -1,15 +1,6 @@
 #![crate_name="base32"]
 #![crate_type="rlib"]
-#![feature(plugin)]
-#![allow(unstable)]
-
-#[cfg(test)]
-extern crate quickcheck;
-
-#[cfg(test)]
-#[plugin]
-extern crate quickcheck_macros;
-
+#![feature(test)]
 
 pub static BASE32_ALPHABET: &'static str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
@@ -106,16 +97,21 @@ pub fn decode(data: &[u8]) -> Option<Vec<u8>> {
 
 #[cfg(test)]
 mod test {
+    extern crate quickcheck;
     extern crate test;
+
     use super::{encode, decode};
 
-    #[quickcheck]
-    fn invertible(data: Vec<u8>) -> bool {
-        if data.len() == 0 {
-            decode(encode(data.as_slice()).as_slice()).is_none()
-        } else {
-            decode(encode(data.as_slice()).as_slice()).unwrap() == data
+    #[test]
+    fn invertible() {
+        fn invertible_data(data: Vec<u8>) -> bool {
+            if data.len() == 0 {
+                decode(&encode(&data)).is_none()
+            } else {
+                decode(&encode(&data)).unwrap() == data
+            }
         }
+        quickcheck::quickcheck(invertible_data as fn(Vec<u8>) -> bool);
     }
 
     #[test]
@@ -131,7 +127,7 @@ mod test {
     #[bench]
     fn bench_encode(b: &mut test::Bencher) {
         let data = [0, 0, 0, 0, 0];
-        b.iter(|| encode(data.as_slice()));
+        b.iter(|| encode(&data));
         b.bytes = data.len() as u64;
     }
 
