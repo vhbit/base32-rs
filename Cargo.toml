@@ -7,4 +7,4 @@ authors = [ "Andreas Ots <qrpth@qrpth.eu>", "Valerii Hiora" ]
 name = "base32"
 
 [dev-dependencies]
-quickcheck = "0.1"
+quickcheck = "0.2"
