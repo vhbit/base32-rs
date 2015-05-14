@@ -1,6 +1,5 @@
 #![crate_name="base32"]
 #![crate_type="rlib"]
-#![feature(test)]
 
 pub static BASE32_ALPHABET: &'static str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
